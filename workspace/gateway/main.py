@@ -347,6 +347,27 @@ async def chat(req: ChatRequest):
         remaining = [p for p in _quality_order if p not in family_set and p in router.providers]
         remaining += [p for p in router.order if p not in family_set and p not in remaining and p in router.providers]
         candidates = family_candidates + remaining
+
+        # If ALL family members are in backoff, wait up to 60s for the
+        # shortest backoff to expire rather than falling through to a
+        # weaker provider (e.g. nvidia-8B) that cannot handle tool calls.
+        import asyncio as _asyncio
+        deadline = time.time() + 60
+        while time.time() < deadline:
+            any_family_available = any(
+                router.pick(est, [fc], required_caps=required_caps)[0] is not None
+                for fc in family_candidates
+            )
+            if any_family_available:
+                break
+            min_backoff = min(
+                (router.state[fc].snapshot(LIMITS.get(fc, {})).get("backoff_remaining", 0)
+                 for fc in family_candidates),
+                default=0,
+            )
+            if min_backoff <= 0 or min_backoff > 60:
+                break
+            await _asyncio.sleep(min(min_backoff + 0.1, 5))
     else:
         candidates = router.candidates(req.provider) if req.provider else list(router.order)
 

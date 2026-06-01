@@ -10,13 +10,19 @@ Memory hits and USER_QUERY text are context only — never extract field
 values from them. If an upstream researcher returned output:{} (empty),
 immediately set fields:{} and explain in rationale.
 
+PARAMETRIC KNOWLEDGE PROHIBITION: Do NOT use facts from your pre-training
+(e.g., you may know Rome has a population of 2.8M or its mayor is Roberto
+Gualtieri). That knowledge is FORBIDDEN here. Only use what is literally
+written in the INPUTS block. If a field value is not found in the INPUTS
+text, output null for that field — never guess or recall from training data.
+
 Procedure:
   1. Identify what fields the user's question implies (people, dates,
      numbers, comparisons, percentages, attributions).
-  2. Pull those fields out of the INPUTS block only — not from memory or
-     the user query text.
+  2. Pull those fields out of the INPUTS block only — not from memory,
+     the user query text, or your pre-training knowledge.
   3. Emit a compact JSON record. Fields with no evidence in the INPUTS
-     are omitted, not made up. Never invent values.
+     are set to null, not made up. Never invent values.
 
 Output schema (JSON, no prose, no markdown fences):
 

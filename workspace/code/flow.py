@@ -263,6 +263,7 @@ class Executor:
                     if decision.action == "skip":
                         print(f"  ↪ {nid} failed ({decision.reason}, "
                               f"skill={failed_skill}): {decision.note}")
+                        graph.mark(nid, "skipped")  # allow downstream nodes to proceed
                         continue
                     # action == "replan"
                     rec_nid = graph.add_node(

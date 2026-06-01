@@ -1,0 +1,9 @@
+{
+  "part": "1_I",
+  "query": "Find the populations of London, Paris, Berlin and tell me which two are closest in size.",
+  "answer": "London has approximately 9 million people, Paris has around 2.6 million, and Berlin has about 6.5 million. The two closest in size are London and Berlin.",
+  "elapsed_s": 105.93,
+  "session_id": "s8-1I-2f9931",
+  "success": true,
+  "expected": "parallel researchers: London, Paris, Berlin \u2192 coder \u2192 formatter"
+}

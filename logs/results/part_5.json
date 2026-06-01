@@ -1,0 +1,12 @@
+{
+  "part": "5",
+  "query": "USE THE TABLE_EXTRACTOR SKILL to parse this CSV table and return all rows as JSON objects:\n\nName,Score,Grade\nAlice,95,A\nBob,82,B\nCarol,71,C\nDave,88,B+",
+  "answer": "{}",
+  "elapsed_s": 42.51,
+  "session_id": "s8-5-table-605c5a",
+  "success": true,
+  "skills_used": [
+    "planner"
+  ],
+  "table_extractor_used": false
+}

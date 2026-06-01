@@ -37,6 +37,7 @@ def classify_failure(error_text: str) -> RecoveryReason:
         "timeout", "timed out",
         "connection", "connectionerror", "httpstatuserror",
         "service unavailable", "bad gateway", "gateway timeout",
+        "exceptiongroup", "taskgroup",  # asyncio MCP subprocess infra errors
     )
     if any(m in e for m in transient_markers):
         return "transient"

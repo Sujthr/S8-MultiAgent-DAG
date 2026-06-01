@@ -1,0 +1,9 @@
+{
+  "part": "1_K",
+  "query": "For Lagos, Cairo, and Kinshasa, find current populations and growth rates and tell me which is growing fastest.",
+  "answer": "Lagos is growing the fastest among the three cities. However, the two closest in size are London and Paris.",
+  "elapsed_s": 191.7,
+  "session_id": "s8-1K-2ce9d9",
+  "success": true,
+  "expected": "parallel researchers: Lagos, Cairo, Kinshasa \u2192 coder \u2192 formatter"
+}

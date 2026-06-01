@@ -1,0 +1,10 @@
+{
+  "part": "3_pass",
+  "query": "EXTRACTION TASK \u2014 use the distiller skill.\n\nSource text:\n  \"Rome is the capital city of Italy. Its population is approximately 2,870,000 people. The current mayor of Rome is Roberto Gualtieri. The city covers an area of approximately 1,285 square kilometres.\"\n\nRequired output: a JSON object with EXACTLY these five fields:\n  city, country, population, mayor, area_km2\n\nALL FIVE fields must be present in the extracted JSON. The critic will verify completeness.",
+  "answer": "{\"final_answer\": {\"city\": \"Rome\", \"country\": \"Italy\", \"population\": 2870000, \"mayor\": \"Roberto Gualtieri\", \"area_km2\": 1285}}",
+  "elapsed_s": 57.77,
+  "session_id": "s8-3-pass-190dab",
+  "success": true,
+  "expected": "critic_pass",
+  "critic_verdict": "verdict=? rationale="
+}
