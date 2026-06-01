@@ -1,0 +1,9 @@
+{
+  "part": "1_J",
+  "query": "Read /nonexistent/path.txt and tell me what's in it.",
+  "answer": "Failed to retrieve content from non-existent resource.",
+  "elapsed_s": 31.6,
+  "session_id": "s8-1J-aed3b1",
+  "success": true,
+  "expected": "graceful failure: planner \u2192 formatter (2 nodes, no tool dispatch)"
+}

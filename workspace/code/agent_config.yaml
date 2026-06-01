@@ -1,0 +1,81 @@
+# Session 8 skills catalogue — S8-Assignment version.
+# Identical to S8SharedCode/code/agent_config.yaml EXCEPT:
+#   1. coder.md is now fully implemented (no longer a stub)
+#   2. table_extractor is a new skill (Part 5 of the assignment)
+#
+# No Python code was changed to add table_extractor — only this YAML entry
+# and its prompt file (prompts/table_extractor.md).  This is the correct
+# way to add skills per the architectural rules.
+
+planner:
+  prompt: prompts/planner.md
+  tools_allowed: []
+  temperature: 0.4
+  max_tokens: 1500
+  description: Decomposes user queries into the initial DAG and synthesises recovery subgraphs on node failure.
+
+retriever:
+  prompt: prompts/retriever.md
+  tools_allowed: [search_knowledge]
+  temperature: 0.2
+  max_tokens: 1200
+  description: Searches Memory and the FAISS index for material relevant to a query.
+
+researcher:
+  prompt: prompts/researcher.md
+  tools_allowed: [web_search, fetch_url]
+  temperature: 0.7
+  max_tokens: 2500
+  description: Performs multi-step web research and produces normalised text outputs.
+
+distiller:
+  prompt: prompts/distiller.md
+  critic: true
+  temperature: 0.1
+  max_tokens: 1200
+  description: Extracts structured fields from raw text or page content.
+
+summariser:
+  prompt: prompts/summariser.md
+  temperature: 0.3
+  max_tokens: 1200
+  description: Condenses long content into a short form.
+
+critic:
+  prompt: prompts/critic.md
+  temperature: 0.0
+  max_tokens: 500
+  description: Evaluates an upstream node's output; emits pass or fail with rationale.
+
+formatter:
+  prompt: prompts/formatter.md
+  temperature: 0.3
+  max_tokens: 1500
+  description: Renders the final answer for the user. Conventional terminal node.
+
+sandbox_executor:
+  prompt: prompts/sandbox_executor.md
+  temperature: 0.0
+  max_tokens: 400
+  description: Runs code from a Coder node in the sandbox and returns stdout, stderr, exit code, and any generated files.
+
+coder:
+  prompt: prompts/coder.md
+  internal_successors: [sandbox_executor]
+  temperature: 0.2
+  max_tokens: 1500
+  description: Writes Python code for deterministic computation; orchestrator hands it to sandbox_executor automatically.
+
+browser:
+  prompt: prompts/browser.md
+  temperature: 0.3
+  max_tokens: 1500
+  description: STUB. Reserved for Session 9.
+
+# ── NEW SKILL (Part 5) ────────────────────────────────────────────────────────
+table_extractor:
+  prompt: prompts/table_extractor.md
+  tools_allowed: []
+  temperature: 0.1
+  max_tokens: 1000
+  description: Parses CSV, Markdown, or HTML tabular data from upstream text and returns a structured JSON table.

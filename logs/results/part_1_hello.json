@@ -1,0 +1,9 @@
+{
+  "part": "1_hello",
+  "query": "Say hello.",
+  "answer": "Hello.",
+  "elapsed_s": 34.01,
+  "session_id": "s8-1hello-73c00e",
+  "success": true,
+  "expected": "minimal DAG: planner \u2192 formatter"
+}

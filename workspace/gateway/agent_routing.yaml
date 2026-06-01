@@ -1,0 +1,12 @@
+# V8 agent → provider pinning.
+#
+# Notes:
+# - Pinning is a preference: if the pinned provider is rate-limited, the
+#   gateway waits up to 30s then falls back through the normal order.
+# - github is at daily RPD limit; removed retriever/sandbox_executor pins.
+# - planner is pinned to gemini — it requires strong reasoning to emit
+#   valid DAG JSON; small models (nvidia-8B) return malformed output.
+
+planner: gemini
+critic: groq
+researcher: gemini

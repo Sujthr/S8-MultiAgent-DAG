@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment secrets
+.env
+workspace/.env
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Database files
+*.db
+*.db-journal
+
+# Session state (large, regeneratable)
+workspace/code/state/
+
+# Logs (regeneratable)
+logs/*.log
+logs/gateway.log
+logs/gateway2.log
+
+# PID files
+.gateway_pid
+
+# FAISS index (regeneratable)
+workspace/code/memory/
+
+# UV lock files for venvs
+workspace/*/uv.lock
+workspace/*/pyproject.toml
+
+# Build artifacts
+*.so
+*.dylib
+*.dll
+
+# OS
+.DS_Store
+Thumbs.db
