@@ -350,6 +350,13 @@ class GitHubProvider(OpenAICompatProvider):
         super().__init__(api_key, model, "https://models.github.ai/inference")
 
 
+class OpenAIProvider(OpenAICompatProvider):
+    name = "openai"
+    capabilities = {**OpenAICompatProvider.capabilities, "reasoning": True}
+    def __init__(self, api_key, model):
+        super().__init__(api_key, model, "https://api.openai.com/v1")
+
+
 # ────────────────────────────────────────────────────────────────────────────
 # Gemini
 # ────────────────────────────────────────────────────────────────────────────
@@ -804,7 +811,7 @@ def model_capabilities(provider_name: str, model: str, default_caps: dict) -> di
     if provider_name == "ollama":
         caps["tools"] = True  # we always have prompted fallback
         caps["reasoning"] = False
-    if provider_name in ("groq", "cerebras", "nvidia", "openrouter", "github"):
+    if provider_name in ("groq", "cerebras", "nvidia", "openrouter", "github", "openai"):
         caps["reasoning"] = _model_supports_reasoning(model)
     return caps
 
@@ -838,6 +845,8 @@ def build_providers(cache_store):
         out["openrouter"] = OpenRouterProvider(k, os.getenv("OPENROUTER_MODEL", "nvidia/nemotron-3-super-120b-a12b:free"))
     if k := os.getenv("GITHUB_ACCESS_TOKEN"):
         out["github"] = GitHubProvider(k, os.getenv("GITHUB_MODEL", "openai/gpt-4.1-mini"))
+    if k := os.getenv("OPENAI_API_KEY"):
+        out["openai"] = OpenAIProvider(k, os.getenv("OPENAI_MODEL", "gpt-4o-mini"))
     if om := os.getenv("OLLAMA_MODEL"):
         out["ollama"] = OllamaProvider(om, os.getenv("OLLAMA_URL", "http://localhost:11434"))
     return out

@@ -52,11 +52,12 @@ QUERY_PARALLEL = QUERY_I   # same query — Part 2 is the parallel-timing proof
 QUERY_CRITIC_FAIL = (
     "EXTRACTION TASK — use the distiller skill.\n\n"
     "Source text:\n"
-    '  "Rome is located in central Italy. It is known for its historic monuments."\n\n'
+    '  "The Colosseum is Rome\'s most famous ancient amphitheatre, '
+    'built in the first century AD."\n\n'
     "Required output: a JSON object with EXACTLY these five fields:\n"
     "  city, country, population, mayor, area_km2\n\n"
-    "ALL FIVE fields must be present in the extracted JSON. "
-    "The critic will verify completeness."
+    "ALL FIVE fields must have non-null, substantive values. "
+    "The critic will verify that all five fields are present and non-null."
 )
 
 QUERY_CRITIC_PASS = (

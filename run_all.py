@@ -17,8 +17,10 @@ import asyncio
 import io
 import json
 import os
+import shutil
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 # Force UTF-8 output on Windows (cp1252 can't encode box-drawing chars)
@@ -47,6 +49,9 @@ from queries_config import (
 
 RESULTS_DIR = HERE / "logs" / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Will be set to the current run's folder in main_async
+_RUN_DIR: Path | None = None
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -77,7 +82,12 @@ def _save_result(part: str, query: str, answer: str, elapsed: float,
         "success": bool(answer and answer.strip()),
         **(extra or {}),
     }
-    _result_file(part).write_text(json.dumps(payload, indent=2))
+    data = json.dumps(payload, indent=2)
+    # Save to flat location (idempotency reference)
+    _result_file(part).write_text(data)
+    # Save to per-run folder (archive)
+    if _RUN_DIR is not None:
+        (_RUN_DIR / f"part_{part}.json").write_text(data)
     LOG.info("Part %s saved -> logs/results/part_%s.json", part, part)
 
 
@@ -111,6 +121,49 @@ def _inspect_graph(sid: str) -> dict:
         return {}
 
 
+def _is_all_providers_exhausted(error_text: str) -> bool:
+    return "all providers unavailable" in error_text.lower()
+
+
+def _prompt_openai_key_cli() -> str | None:
+    """Prompt for OpenAI key in CLI mode. Returns key or None."""
+    if not sys.stdin.isatty():
+        return None
+    print("\n" + "=" * 60)
+    print("  ALL FREE API PROVIDERS EXHAUSTED")
+    print("  Enter your OpenAI API key to continue, or press Enter to skip.")
+    print("  (Get one at: https://platform.openai.com/api-keys)")
+    print("=" * 60)
+    try:
+        key = input("  OpenAI key (sk-...): ").strip()
+    except (EOFError, KeyboardInterrupt):
+        return None
+    if not key or not key.startswith("sk-"):
+        print("  Skipping — invalid or empty key.")
+        return None
+    return key
+
+
+def _save_openai_key(key: str) -> None:
+    """Write OpenAI key to both .env files."""
+    for env_path in [HERE / ".env", HERE / "workspace" / ".env"]:
+        if not env_path.exists():
+            continue
+        text = env_path.read_text(encoding="utf-8")
+        lines = []
+        for line in text.splitlines():
+            if line.startswith("OPENAI_API_KEY="):
+                lines.append(f"OPENAI_API_KEY={key}")
+            else:
+                lines.append(line)
+        env_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    LOG.info("OpenAI key saved to .env. Restart the gateway to apply: run stop.bat then start.bat")
+    print("\n  Key saved! To use it, restart the gateway:")
+    print("  1. Run stop.bat")
+    print("  2. Run start.bat")
+    print("  Or re-run from the UI (it will restart automatically).\n")
+
+
 # ── query executor ────────────────────────────────────────────────────────────
 
 async def _run_query(query: str, label: str) -> tuple[str, float, str]:
@@ -131,6 +184,13 @@ async def _run_query(query: str, label: str) -> tuple[str, float, str]:
         answer = f"ERROR: {exc}"
     elapsed = time.time() - t0
     LOG.info("Finished [%s] in %.1fs", label, elapsed)
+
+    # Detect all-providers-exhausted and prompt for OpenAI key in CLI mode
+    if _is_all_providers_exhausted(answer):
+        key = _prompt_openai_key_cli()
+        if key:
+            _save_openai_key(key)
+
     return answer, elapsed, sid
 
 
@@ -139,7 +199,6 @@ async def _run_query(query: str, label: str) -> tuple[str, float, str]:
 async def run_part1(force: bool = False) -> None:
     _separator("PART 1 — Base Queries (hello, A, I, J, K) — verbatim from Session 8 PDF")
     queries = [
-        # (part_id, label, query, expected_note)
         ("1_hello", "1hello", QUERY_HELLO,
          "minimal DAG: planner → formatter"),
         ("1_A",     "1A",     QUERY_A,
@@ -174,7 +233,6 @@ async def run_part2(force: bool = False) -> None:
     answer, elapsed, sid = await _run_query(QUERY_I, "2-parallel")
     wall = time.time() - t0
 
-    # Inspect graph to verify concurrency
     graph_info = _inspect_graph(sid)
     researcher_nodes = graph_info.get("researcher", [])
     concurrency_note = "DAG graph not available for inspection"
@@ -207,18 +265,16 @@ async def run_part2(force: bool = False) -> None:
 async def run_part3(force: bool = False) -> None:
     _separator("PART 3 — Critic FAIL then PASS (distiller auto-inserts critic)")
 
-    # Run 1: FAIL — source text missing population, mayor, area_km2
     if force or not _already_done("3_fail"):
-        LOG.info("Run 1 (expected FAIL): incomplete source text → critic rejects")
+        LOG.info("Run 1 (expected FAIL): sparse source → critic rejects → recovery planner fires")
         answer_fail, elapsed_fail, sid_fail = await _run_query(
             QUERY_CRITIC_FAIL, "3-fail")
 
-        # Check whether a critic node fired and what it said
         graph_info = _inspect_graph(sid_fail)
         critic_nodes = graph_info.get("critic", [])
         recovery_planners = [
             n for n in graph_info.get("planner", [])
-            if n["nid"] != "n:1"  # exclude the initial planner
+            if n["nid"] != "n:1"
         ]
         critic_verdict = "no critic node found"
         if critic_nodes:
@@ -230,13 +286,12 @@ async def run_part3(force: bool = False) -> None:
 
         _save_result("3_fail", QUERY_CRITIC_FAIL, answer_fail,
                      elapsed_fail, sid_fail,
-                     extra={"expected": "critic_fail_triggered",
+                     extra={"expected": "critic_fail_then_recovery_succeeds",
                             "critic_verdict": critic_verdict,
                             "recovery_planners": len(recovery_planners)})
     else:
         LOG.info("Part 3/fail already done — skipping")
 
-    # Run 2: PASS — source text has all five required fields
     if force or not _already_done("3_pass"):
         LOG.info("Run 2 (expected PASS): complete source text → critic approves")
         answer_pass, elapsed_pass, sid_pass = await _run_query(
@@ -244,7 +299,6 @@ async def run_part3(force: bool = False) -> None:
 
         graph_info = _inspect_graph(sid_pass)
         critic_nodes = graph_info.get("critic", [])
-        sandbox_nodes = graph_info.get("sandbox_executor", [])
         critic_verdict = "no critic node found"
         if critic_nodes:
             out = critic_nodes[0].get("output") or {}
@@ -271,7 +325,6 @@ async def run_part4(force: bool = False) -> None:
     LOG.info("Coder query: %s", QUERY_CODER)
     answer, elapsed, sid = await _run_query(QUERY_CODER, "4-coder")
 
-    # Inspect sandbox and coder outputs
     graph_info = _inspect_graph(sid)
     sandbox_nodes = graph_info.get("sandbox_executor", [])
     coder_nodes = graph_info.get("coder", [])
@@ -309,7 +362,6 @@ async def run_part5(force: bool = False) -> None:
     LOG.info("New skill query: %s", QUERY_NEW_SKILL[:100])
     answer, elapsed, sid = await _run_query(QUERY_NEW_SKILL, "5-table")
 
-    # Check which skill the planner actually used
     graph_info = _inspect_graph(sid)
     skills_used = sorted(graph_info.keys())
     table_used = "table_extractor" in graph_info
@@ -325,6 +377,14 @@ async def run_part5(force: bool = False) -> None:
 # ── main ──────────────────────────────────────────────────────────────────────
 
 async def main_async(parts: list[int], force: bool) -> None:
+    global _RUN_DIR
+
+    # Create a timestamped folder for this run's results
+    run_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    _RUN_DIR = RESULTS_DIR / f"run_{run_ts}"
+    _RUN_DIR.mkdir(parents=True, exist_ok=True)
+    LOG.info("Run folder: %s", _RUN_DIR)
+
     runners = {
         1: run_part1,
         2: run_part2,
@@ -346,6 +406,13 @@ async def main_async(parts: list[int], force: bool) -> None:
     LOG.info("")
     LOG.info("All requested parts complete.  Total time: %.1fs", time.time() - total_start)
     LOG.info("Results: %s", RESULTS_DIR)
+    LOG.info("Run archive: %s", _RUN_DIR)
+
+    # Copy run folder to "latest"
+    latest = RESULTS_DIR / "latest"
+    if latest.exists():
+        shutil.rmtree(latest)
+    shutil.copytree(_RUN_DIR, latest)
 
     # Print summary table
     print("\n" + "─" * 70)
@@ -359,6 +426,7 @@ async def main_async(parts: list[int], force: bool) -> None:
         except Exception:
             pass
     print("─" * 70 + "\n")
+    print(f"Run archive saved to: {_RUN_DIR}")
 
 
 def main() -> None:

@@ -1,11 +1,11 @@
 {
   "part": "3_fail",
   "query": "EXTRACTION TASK \u2014 use the distiller skill.\n\nSource text:\n  \"The Colosseum is Rome's most famous ancient amphitheatre, built in the first century AD.\"\n\nRequired output: a JSON object with EXACTLY these five fields:\n  city, country, population, mayor, area_km2\n\nALL FIVE fields must have non-null, substantive values. The critic will verify that all five fields are present and non-null.",
-  "answer": "The upstream critic node returned an empty result, so the requested information could not be extracted.",
-  "elapsed_s": 48.46,
-  "session_id": "s8-3-fail-6f6f85",
+  "answer": "{}",
+  "elapsed_s": 72.53,
+  "session_id": "s8-3-fail-ce9aa1",
   "success": true,
   "expected": "critic_fail_then_recovery_succeeds",
-  "critic_verdict": "verdict=? rationale=",
-  "recovery_planners": 0
+  "critic_verdict": "verdict=fail rationale=The upstream output is missing all five required fields: city, country, population, mayor, and area_km2, which must have non-null, substantive values.",
+  "recovery_planners": 1
 }

@@ -20,6 +20,7 @@ LIMITS = {
     "gemini5":    _GEMINI_LIMITS,
     "openrouter": {"rpm": 20,   "rpd": 50,      "tpm": 99999999, "cooldown": 3,   "max_ctx": 100000},
     "github":     {"rpm": 10,   "rpd": 50,      "tpm": 99999999, "cooldown": 6,   "max_ctx": 8000},
+    "openai":     {"rpm": 60,   "rpd": 9999,    "tpm": 1_000_000, "cooldown": 1,   "max_ctx": 128000},
 }
 
 SHORTCUTS = {
@@ -30,6 +31,7 @@ SHORTCUTS = {
     "c": "cerebras", "cer": "cerebras", "cerebras": "cerebras",
     "or": "openrouter", "opr": "openrouter", "openrouter": "openrouter",
     "gh": "github", "ghb": "github", "github": "github",
+    "oa": "openai", "openai": "openai",
 }
 
 

@@ -1,0 +1,10 @@
+{
+  "part": "4",
+  "query": "USE THE CODER SKILL: Write and execute Python code to calculate compound interest on a principal of $10,000 at an annual rate of 7% compounded monthly for 5 years. The code must print the final amount and total interest earned.",
+  "answer": "{\"exit_code\": 0, \"stdout\": \"Final Amount: $14176.25\\r\\nTotal Interest Earned: $4176.25\\r\\n\", \"stdout_truncated\": false, \"stderr\": \"\", \"stderr_truncated\": false, \"files_written\": [], \"timed_out\": false, \"cwd\": \"C:\\\\Users\\\\DELL\\\\AppData\\\\Local\\\\Temp\\\\s8sandbox-h2jwzflf\"}",
+  "elapsed_s": 82.89,
+  "session_id": "s8-4-coder-29e155",
+  "success": true,
+  "coder_note": "code_length=300 summary=Calculates compound interest on $10,000 at 7% annual rate compounded monthly for 5 years, printing t",
+  "sandbox_note": "exit_code=0 | stdout=Final Amount: $14176.25\r\nTotal Interest Earned: $4176.25\r\n"
+}

@@ -90,18 +90,33 @@ async def run_with_tools(*, prompt: str, tools_payload: list[dict],
                         "tool_call_id": tc.get("id", ""),
                         "content": result_text[:8_000] or "(no result)",
                     })
-    # Hit the hop cap. Return whatever the gateway last said.
+            # Hop cap reached — ask the model to emit its final JSON text now.
+            messages.append({
+                "role": "user",
+                "content": (
+                    "Maximum tool calls reached. Stop calling tools and output "
+                    "your final JSON answer now based on everything you found."
+                ),
+            })
+            forced = await _chat(messages=messages, tools=tools_payload,
+                                 agent=agent, session_id=session_id,
+                                 provider_pin=provider_pin,
+                                 max_tokens=max_tokens, temperature=temperature,
+                                 tool_choice="none")
+            if forced.get("text"):
+                return forced
+    # Fall back to whatever the last reply contained.
     return last_reply
 
 
 async def _chat(*, messages, tools, agent, session_id, provider_pin,
-                max_tokens, temperature) -> dict:
+                max_tokens, temperature, tool_choice: str = "auto") -> dict:
     import asyncio as _a
     return await _a.to_thread(
         LLM().chat,
         messages=messages,
         tools=tools,
-        tool_choice="auto",
+        tool_choice=tool_choice,
         agent=agent,
         session=session_id,
         provider=provider_pin,

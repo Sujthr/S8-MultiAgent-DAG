@@ -1,0 +1,11 @@
+{
+  "part": "2",
+  "query": "Find the populations of London, Paris, Berlin and tell me which two are closest in size.",
+  "answer": "The populations of London, Paris, and Berlin are approximately: London 9,626,000, Paris 11,215,000, and Berlin 3,573,000. Based on these figures, London and Paris are the two cities closest in population size.",
+  "elapsed_s": 112.27,
+  "session_id": "s8-2-parallel-b3525b",
+  "success": true,
+  "wall_s": 112.27,
+  "concurrency_note": "researcher branch times: [46.5, 0.0, 24.7] s | max=46.5s  sum=71.2s  wall=112.3s | parallel=VERIFY",
+  "sandbox_note": "exit_code=0 stdout=The populations of London, Paris, and Berlin are approximately: London 9626000, Paris 11215000, and Berlin 3573000. Based on these figures, London and Paris are the two cities closest in population si"
+}

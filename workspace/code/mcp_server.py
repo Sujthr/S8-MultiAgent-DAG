@@ -135,36 +135,83 @@ def _ddg_search(query: str, max_results: int) -> list[dict]:
     ]
 
 
+async def _httpx_fetch_text(url: str) -> dict:
+    """Plain HTTP fallback: no JS execution, works well for Wikipedia and
+    other static pages. Used when crawl4ai returns too little content."""
+    import re
+    import html as _html
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0.0.0 Safari/537.36"
+        ),
+        "Accept-Language": "en-US,en;q=0.9",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=30, follow_redirects=True) as c:
+            r = await c.get(url, headers=headers)
+        status = r.status_code
+        raw_html = r.text
+    except Exception as e:
+        return {"status": 0, "content_type": "text/plain", "length_bytes": 0,
+                "text": f"(fetch failed: {e})"}
+    # Strip script/style/nav blocks, then all remaining tags, decode entities.
+    cleaned = re.sub(r'<(script|style|nav|header|footer)[^>]*>.*?</\1>',
+                     '', raw_html, flags=re.DOTALL | re.IGNORECASE)
+    cleaned = re.sub(r'<[^>]+>', ' ', cleaned)
+    cleaned = _html.unescape(cleaned)
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+    return {
+        "status": status,
+        "content_type": "text/plain",
+        "length_bytes": len(cleaned.encode("utf-8")),
+        "text": cleaned[:30_000],
+    }
+
+
 async def _crawl4ai_fetch(url: str) -> dict:
     from crawl4ai import AsyncWebCrawler
 
-    # crawl4ai uses Rich which writes via its own captured stdout reference, so
-    # contextlib.redirect_stdout doesn't catch it. Redirect at the file-descriptor
-    # level — crawl4ai's banner / [FETCH] / [SCRAPE] markers would otherwise
-    # corrupt the MCP stdio JSON-RPC stream.
-    saved_fd = os.dup(1)
-    os.dup2(2, 1)
+    text = ""
+    status = 200
     try:
-        async with AsyncWebCrawler(verbose=False) as crawler:
-            r = await crawler.arun(url=url)
-    finally:
-        os.dup2(saved_fd, 1)
-        os.close(saved_fd)
-    # r.markdown is a str subclass (StringCompatibleMarkdown) that Pydantic
-    # serializes as {} because its real field is private. Pull the raw string
-    # out and force a plain str so FastMCP serializes correctly.
-    md = r.markdown
-    raw = (
-        getattr(md, "raw_markdown", None)
-        or getattr(md, "fit_markdown", None)
-        or md
-        or r.cleaned_html
-        or r.html
-        or ""
-    )
-    text = str(raw)
+        # crawl4ai uses Rich which writes via its own captured stdout reference, so
+        # contextlib.redirect_stdout doesn't catch it. Redirect at the file-descriptor
+        # level — crawl4ai's banner / [FETCH] / [SCRAPE] markers would otherwise
+        # corrupt the MCP stdio JSON-RPC stream.
+        saved_fd = os.dup(1)
+        os.dup2(2, 1)
+        try:
+            async with AsyncWebCrawler(verbose=False) as crawler:
+                r = await crawler.arun(url=url)
+        finally:
+            os.dup2(saved_fd, 1)
+            os.close(saved_fd)
+        status = int(getattr(r, "status_code", None) or 200)
+        # r.markdown is a str subclass (StringCompatibleMarkdown) that Pydantic
+        # serializes as {} because its real field is private. Pull the raw string
+        # out and force a plain str so FastMCP serializes correctly.
+        md = r.markdown
+        raw = (
+            getattr(md, "raw_markdown", None)
+            or getattr(md, "fit_markdown", None)
+            or md
+            or r.cleaned_html
+            or r.html
+            or ""
+        )
+        text = str(raw)
+    except Exception:
+        pass  # fall through to httpx fallback below
+
+    # If crawl4ai returned too little content (JS-heavy page, bot block, timeout),
+    # fall back to a plain httpx GET which works well for Wikipedia and static pages.
+    if len(text.strip()) < 500:
+        return await _httpx_fetch_text(url)
+
     return {
-        "status": int(getattr(r, "status_code", None) or 200),
+        "status": status,
         "content_type": "text/markdown",
         "length_bytes": len(text.encode("utf-8")),
         "text": text,

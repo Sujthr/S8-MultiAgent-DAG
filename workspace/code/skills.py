@@ -294,6 +294,12 @@ async def run_skill(skill: Skill, node_id: str, graph_nodes,
         )
     parsed = parse_skill_json(reply.get("text", ""))
 
+    # For tool-using skills (researcher, retriever): if the model returned
+    # prose instead of JSON (e.g. an openrouter model without tool-call support),
+    # wrap the prose as findings so downstream nodes get something to work with.
+    if not parsed and skill.tools_allowed and (reply.get("text") or "").strip():
+        parsed = {"findings": reply["text"][:3000]}
+
     # Lift orchestrator-recognised fields out of the skill's JSON.
     # NOTES_RUNS feedback P0 #1: malformed successors used to be silently
     # dropped, which left students chasing "missing node" bugs for an hour.

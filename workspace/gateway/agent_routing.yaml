@@ -10,3 +10,6 @@
 planner: gemini
 critic: groq
 researcher: gemini
+coder: groq
+distiller: groq
+table_extractor: groq

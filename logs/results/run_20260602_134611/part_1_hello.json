@@ -1,9 +1,9 @@
 {
   "part": "1_hello",
   "query": "Say hello.",
-  "answer": "Hello!",
-  "elapsed_s": 47.53,
-  "session_id": "s8-1hello-6d0213",
+  "answer": "Hello.",
+  "elapsed_s": 45.81,
+  "session_id": "s8-1hello-a71d1b",
   "success": true,
   "expected": "minimal DAG: planner \u2192 formatter"
 }

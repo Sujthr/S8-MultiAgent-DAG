@@ -37,14 +37,3 @@ Look at the USER_QUERY and INPUTS to understand what the code should compute.
 If the task requires iterative or formula-based computation (compound interest,
 Fibonacci, statistics), write the formula explicitly rather than using a library
 shortcut so the result is self-documenting.
-
-CRITICAL: You MUST always return valid JSON matching the output schema above.
-NEVER return prose, explanations, or plain text — only the JSON object.
-Even if INPUTS are empty, "(not found)", or contain no numerical data, still
-return the required JSON:
-  {
-    "code": "print('Insufficient data: upstream researchers returned no usable values')",
-    "summary": "No computation possible — input data was unavailable."
-  }
-If the USER_QUERY provides all the parameters directly (e.g. principal, rate,
-years), use those values from the query itself and do NOT depend on INPUTS.

@@ -21,6 +21,11 @@ upstream output is missing any of those fields, emit fail — even if the source
 text did not contain that information. The output has failed the stated
 requirement.
 
+IMPORTANT ABOUT NULL VALUES: A field whose value is null, undefined, "N/A",
+"unknown", or empty string is MISSING, not present. Only non-null, substantive
+values satisfy a "must be present" requirement. If the USER_QUERY requires a
+field and that field is null in the upstream output, emit fail.
+
 Output schema (JSON, no prose, no markdown fences):
 
   {
