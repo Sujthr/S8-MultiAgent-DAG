@@ -18,9 +18,12 @@ start.bat
 # Stop gateway
 stop.bat   # or ./stop.sh
 
-# Run only specific part
+# Run only specific part (always re-runs fresh)
 python run_all.py --part 2
-python run_all.py --part 3 --force    # force re-run
+
+# Skip parts already completed (opt-in)
+python run_all.py --skip-done
+python run_all.py --part 2 --skip-done
 ```
 
 ---
@@ -68,7 +71,7 @@ User Query
 | `workspace/gateway/` | LLM Gateway V8 — multi-key Gemini + provider failover |
 | `workspace/gateway/agent_routing.yaml` | Pin specific skills to providers |
 | `queries_config.py` | Canonical query strings from Session 8 PDF |
-| `run_all.py` | Idempotent runner — saves `logs/results/part_*.json` |
+| `run_all.py` | Assignment runner — always re-runs all parts; use `--skip-done` to skip completed parts |
 
 **Provider failover order:**
 ```

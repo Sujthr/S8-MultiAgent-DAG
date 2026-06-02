@@ -2,13 +2,12 @@
 run_all.py — S8 Assignment Runner
 
 Executes all five assignment parts in order, logging each result.
-Runs each query exactly ONCE — if a session-id file already exists for a
-part, that part is skipped (idempotent re-runs).
+Every invocation re-runs all parts from scratch by default.
 
 Usage:
-    python run_all.py              # run all parts
-    python run_all.py --part 2    # run only Part 2
-    python run_all.py --force     # ignore previous runs, re-run everything
+    python run_all.py              # run all parts (always fresh)
+    python run_all.py --part 2    # run only Part 2 (always fresh)
+    python run_all.py --skip-done # skip parts whose result file already exists
 """
 from __future__ import annotations
 
@@ -433,12 +432,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="S8 Assignment Runner")
     parser.add_argument("--part", type=int, choices=[1, 2, 3, 4, 5],
                         help="Run only this part (default: all)")
-    parser.add_argument("--force", action="store_true",
-                        help="Re-run even if already done")
+    parser.add_argument("--skip-done", action="store_true",
+                        help="Skip parts whose result file already exists (opt-in, not the default)")
     args = parser.parse_args()
 
     parts = [args.part] if args.part else [1, 2, 3, 4, 5]
-    asyncio.run(main_async(parts, force=args.force))
+    asyncio.run(main_async(parts, force=not args.skip_done))
 
 
 if __name__ == "__main__":
