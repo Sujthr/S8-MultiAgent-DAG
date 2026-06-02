@@ -299,19 +299,32 @@ class Executor:
 
     async def _run_one(self, nid: str, graph: Graph, sid: str, query: str,
                        store: SessionStore, memory_hits: list) -> tuple[str, AgentResult, str]:
+        from recovery import classify_failure
         skill_name = graph.g.nodes[nid]["skill"]
         skill = self.registry.get(skill_name)
         fr = graph.g.nodes[nid].get("metadata", {}).get("failure_report")
         store.write_node(NodeState(node_id=nid, skill=skill_name, status="running",
                                    inputs=graph.g.nodes[nid]["inputs"],
                                    started_at=time.time()))
-        try:
-            result, prompt = await run_skill(skill, nid, graph.g.nodes, sid, query, fr,
-                                             memory_hits=memory_hits)
-        except Exception as e:  # pragma: no cover - dispatcher fault path
-            result = AgentResult(success=False, agent_name=skill_name,
-                                 error=f"exception: {type(e).__name__}: {e}")
-            prompt = "(exception before prompt-render)"
+
+        _MAX_RETRIES = 2
+        _RETRY_DELAY = 5  # seconds; give the gateway time to recover from a burst 503
+        prompt = "(exception before prompt-render)"
+        result = AgentResult(success=False, agent_name=skill_name, error="not run")
+        for attempt in range(_MAX_RETRIES + 1):
+            try:
+                result, prompt = await run_skill(skill, nid, graph.g.nodes, sid, query, fr,
+                                                 memory_hits=memory_hits)
+            except Exception as e:  # pragma: no cover - dispatcher fault path
+                result = AgentResult(success=False, agent_name=skill_name,
+                                     error=f"exception: {type(e).__name__}: {e}")
+            if result.success or attempt >= _MAX_RETRIES:
+                break
+            if classify_failure(result.error or "") != "transient":
+                break
+            print(f"  ↪ [{nid}] {skill_name} transient failure "
+                  f"(attempt {attempt + 1}/{_MAX_RETRIES}); retrying in {_RETRY_DELAY}s…")
+            await asyncio.sleep(_RETRY_DELAY)
         return nid, result, prompt
 
 
