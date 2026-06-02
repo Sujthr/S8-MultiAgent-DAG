@@ -1,9 +1,0 @@
-{
-  "part": "1_K",
-  "query": "For Lagos, Cairo, and Kinshasa, find current populations and growth rates and tell me which is growing fastest.",
-  "answer": "The upstream process failed to return data regarding the populations and growth rates of Lagos, Cairo, and Kinshasa. As a result, I cannot determine which city is growing fastest.",
-  "elapsed_s": 328.55,
-  "session_id": "s8-1K-79601c",
-  "success": true,
-  "expected": "parallel researchers: Lagos, Cairo, Kinshasa \u2192 coder \u2192 formatter"
-}

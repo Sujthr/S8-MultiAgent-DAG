@@ -1,9 +1,0 @@
-{
-  "part": "1_J",
-  "query": "Read /nonexistent/path.txt and tell me what's in it.",
-  "answer": "I cannot tell you what is in the file because no upstream results or file content were provided.",
-  "elapsed_s": 65.07,
-  "session_id": "s8-1J-f6797d",
-  "success": true,
-  "expected": "graceful failure: planner \u2192 formatter (2 nodes, no tool dispatch)"
-}
